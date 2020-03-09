@@ -8,6 +8,10 @@ variable "asgs" {
 }
 
 
+// Can't default protocol to "Tcp" until https://github.com/hashicorp/terraform/issues/19898 is resolved
+// This will allow optional and defaulted values in Type Constraints. Also look at allowing ranges at that point,
+// and defaulting access, direction and source port range instead of hardcoding.
+
 variable "nsgs" {
   type = list(object({
     name = string
@@ -17,10 +21,10 @@ variable "nsgs" {
       source   = any
       dest     = any
       ports    = list(number)
+      protocol = string
     }))
   }))
 }
-
 
 variable "prefix" {
   description = "Optional prefix for all resources to be created"
