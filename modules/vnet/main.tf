@@ -69,9 +69,9 @@ resource "azurerm_subnet" "subnet" {
   resource_group_name  = data.azurerm_resource_group.vnet.name
   virtual_network_name = azurerm_virtual_network.vnet.name
 
-  for_each       = {
-      for subnet in local.subnets :
-      subnet.name => subnet.address_prefix
+  for_each = {
+    for subnet in local.subnets :
+    subnet.name => subnet.address_prefix
   }
 
   name           = each.key
