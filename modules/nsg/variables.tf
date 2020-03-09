@@ -12,10 +12,11 @@ variable "nsgs" {
   type = list(object({
     name = string
     rules = list(object({
-      name   = string
-      source = any
-      dest   = any
-      port   = any
+      priority = number
+      name     = string
+      source   = any
+      dest     = any
+      ports    = list(number)
     }))
   }))
 }
