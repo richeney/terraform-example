@@ -1,5 +1,8 @@
 .terraform/*
 terraform.tf*
+*/.terraform/*
+*/terraform.tf*
+*/provider.tf
 modules/*/.terraform/*
 modules/*/terraform.tf*
 modules/*/provider.tf

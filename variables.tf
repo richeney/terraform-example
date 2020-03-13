@@ -1,9 +1,12 @@
-variable "hub_resource_group" {
-  default = "hub"
+variable "hub" {
+  type        = string
+  description = "Used for both the vnet and the resource group, and to prefix resources."
+  default     = "hub"
 }
 
-variable "prefix" {
-  default = "hub"
+variable "hub_vnet_address_space" {
+  type    = list(string)
+  default = ["10.0.0.0/16"]
 }
 
 variable "location" {

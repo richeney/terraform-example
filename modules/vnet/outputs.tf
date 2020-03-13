@@ -20,9 +20,15 @@ output "vnet" {
   */
 }
 
-/*
+
 output "subnets" {
-  for_
-  value = azurerm
+  value = {
+    for subnet in local.subnets :
+    subnet.name => {
+      name           = subnet.name
+      address_prefix = subnet.address_prefix
+      nsg_id         = subnet.nsg_id
+      id             = azurerm_subnet.subnet[subnet.name].id
+    }
+  }
 }
-*/

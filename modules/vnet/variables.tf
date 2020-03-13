@@ -46,12 +46,21 @@ variable "network_security_group_id" {
   default = null
 }
 
+// Can't default private endpoints to [] until https://github.com/hashicorp/terraform/issues/19898 is resolved
+
 variable "subnets" {
   type = list(object({
     name           = string
     address_prefix = string
     nsg_id         = string
+    // private_endpoints = { type = list(string), default = [] }
   }))
 
   default = []
+}
+
+variable "service_endpoints" {
+  type        = map
+  description = "{ <subnet_name>: [ \"AzureService\" ]} from AzureActiveDirectory, AzureCosmosDB, ContainerRegistry, EventHub, KeyVault, ServiceBus, Sql, Storage and Web."
+  default     = {}
 }

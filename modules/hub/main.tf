@@ -3,20 +3,32 @@ data "azurerm_client_config" "current" {
 
 locals {
   ssh_public_keys = {
-    // Convert list of objects to simpler map
-    // Maps like this cannot be defined in structural types
-    for object in var.hub.ssh_public_keys :
+    for object in var.ssh_public_keys :
     object.username => file(object.ssh_public_key_file)
   }
 }
+
 resource "azurerm_resource_group" "hub" {
-  name     = var.hub.resource_group
-  location = var.hub.location
-  tags     = var.hub.tags
+  name     = var.resource_group
+  location = var.location
+  tags     = var.tags
 }
 
-resource "random_string" "kv" {
-  length  = 8
+module "vnet" {
+  source = "../vnet"
+
+  resource_group = azurerm_resource_group.hub.name
+  vnet_name      = var.vnet_name
+  address_space  = var.vnet_address_space
+  ddos           = var.ddos
+
+  subnets = var.subnets
+
+  service_endpoints = var.service_endpoints
+}
+
+resource "random_string" "hub" {
+  length  = 10
   special = false
   upper   = false
   lower   = true
@@ -24,7 +36,7 @@ resource "random_string" "kv" {
 }
 
 resource "azurerm_key_vault" "hub" {
-  name                = "${substr(var.hub.key_vault_name, 0, 15)}-${random_string.kv.result}"
+  name                = "${substr(var.key_vault_name, 0, 13)}-${random_string.hub.result}"
   location            = azurerm_resource_group.hub.location
   resource_group_name = azurerm_resource_group.hub.name
   tags                = azurerm_resource_group.hub.tags
@@ -34,6 +46,8 @@ resource "azurerm_key_vault" "hub" {
   enabled_for_deployment          = false
   enabled_for_template_deployment = false
   enabled_for_disk_encryption     = false
+
+
 
   access_policy {
     tenant_id = data.azurerm_client_config.current.tenant_id
@@ -84,8 +98,31 @@ resource "null_resource" "ssh_pub_key_sleep" {
   }
 }
 
+resource "azurerm_log_analytics_workspace" "hub" {
+  name                = "${var.workspace_name}-${random_string.hub.result}"
+  location            = azurerm_resource_group.hub.location
+  resource_group_name = azurerm_resource_group.hub.name
+  tags                = azurerm_resource_group.hub.tags
+
+  sku               = "PerGB2018"
+  retention_in_days = var.workspace_retention
+}
+
+resource "azurerm_key_vault_secret" "hub_workspace_name" {
+  key_vault_id = azurerm_key_vault.hub.id
+  name         = "hub-workspace-name"
+  value        = azurerm_log_analytics_workspace.hub.name
+  content_type = "workspace-name"
+}
+resource "azurerm_key_vault_secret" "hub_workspace_key" {
+  key_vault_id = azurerm_key_vault.hub.id
+  name         = "hub-workspace-key"
+  value        = azurerm_log_analytics_workspace.hub.secondary_shared_key
+  content_type = "workspace-key"
+}
+
 resource "azurerm_storage_account" "diags" {
-  name                = "${substr(lower(var.hub.diagnostics_storage_account), 0, 15)}${random_string.kv.result}"
+  name                = "${substr(lower(var.diagnostics_storage_account), 0, 14)}${random_string.hub.result}"
   resource_group_name = azurerm_resource_group.hub.name
   location            = azurerm_resource_group.hub.location
   tags                = azurerm_resource_group.hub.tags
@@ -93,15 +130,62 @@ resource "azurerm_storage_account" "diags" {
   account_kind             = "StorageV2"
   account_tier             = "Standard"
   account_replication_type = "LRS"
-
-
 }
 
-/*
-Needs storage blob contributor permissions
-resource "azurerm_storage_container" "diags" {
-  name                  = "boot-diagnostics"
-  storage_account_name  = azurerm_storage_account.diags.name
-  container_access_type = "private"
+resource "azurerm_key_vault_secret" "hub_diags_name" {
+  key_vault_id = azurerm_key_vault.hub.id
+  name         = "hub-diags-name"
+  value        = azurerm_storage_account.diags.name
+  content_type = "storage-name"
 }
-*/
+
+resource "azurerm_key_vault_secret" "hub_diags_key" {
+  key_vault_id = azurerm_key_vault.hub.id
+  name         = "hub-diags-key"
+  value        = azurerm_storage_account.diags.secondary_access_key
+  content_type = "storage-key"
+}
+
+resource "azurerm_recovery_services_vault" "hub" {
+  name                = var.recovery_vault_name
+  resource_group_name = azurerm_resource_group.hub.name
+  location            = azurerm_resource_group.hub.location
+  tags                = azurerm_resource_group.hub.tags
+  sku                 = "Standard"
+  soft_delete_enabled = true
+}
+
+resource "azurerm_backup_policy_vm" "default" {
+  name                = "default"
+  resource_group_name = azurerm_resource_group.hub.name
+  recovery_vault_name = azurerm_recovery_services_vault.hub.name
+
+  timezone = "UTC"
+
+  backup {
+    frequency = "Daily"
+    time      = "23:00"
+  }
+
+  retention_daily {
+    count = 14 //Between 1 & 9999
+  }
+
+  retention_weekly {
+    count    = 13
+    weekdays = ["Wednesday", "Sunday"]
+  }
+
+  retention_monthly {
+    count    = 12
+    weekdays = ["Sunday"]
+    weeks    = ["Last"]
+  }
+
+  retention_yearly {
+    count    = 3
+    weekdays = ["Sunday"]
+    weeks    = ["Last"]
+    months   = ["January"]
+  }
+}

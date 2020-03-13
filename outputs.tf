@@ -1,9 +1,21 @@
-output "key_vault_id" {
-  value = module.hub.key_vault_id
+output "hub_vnet" {
+  value = module.hub.vnet
 }
 
-output "key_vault_uri" {
-  value = module.hub.key_vault_uri
+output "hub_subnets" {
+  value = module.hub.subnets
+}
+
+output "hub_workspace" {
+  value = module.hub.workspace
+}
+
+output "hub_key_vault" {
+  value = module.hub.key_vault
+}
+
+output "hub_diags" {
+  value = module.hub.diags
 }
 
 output "ssh_users" {

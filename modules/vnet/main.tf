@@ -16,12 +16,20 @@ locals {
   }]
 
   // Only one DDOS Protection Plan per region
-  ddos_vnet = var.ddos ? [local.location] : []
+  ddos_vnet = toset(var.ddos ? ["Standard"] : [])
+
+  service_endpoints = {
+    for subnet in keys(var.service_endpoints) :
+    subnet => [
+      for service in var.service_endpoints[subnet] :
+      "Microsoft.${trimprefix(service, "Microsoft.")}"
+    ]
+  }
 }
 
 resource "azurerm_network_ddos_protection_plan" "ddos" {
-  for_each = toset(local.ddos_vnet)
-  name     = each.value
+  for_each = local.ddos_vnet
+  name     = local.location
 
   resource_group_name = data.azurerm_resource_group.vnet.name
   location            = local.location
@@ -42,7 +50,7 @@ resource "azurerm_virtual_network" "vnet" {
   dns_servers   = var.dns_servers
 
   dynamic "ddos_protection_plan" {
-    for_each = toset(local.ddos_vnet)
+    for_each = local.ddos_vnet
     content {
       id     = azurerm_network_ddos_protection_plan.ddos[ddos_protection_plan.value].id
       enable = true
@@ -74,8 +82,9 @@ resource "azurerm_subnet" "subnet" {
     subnet.name => subnet.address_prefix
   }
 
-  name           = each.key
-  address_prefix = each.value
+  name              = each.key
+  address_prefix    = each.value
+  service_endpoints = contains(keys(local.service_endpoints), each.key) ? local.service_endpoints[each.key] : null
 }
 
 resource "azurerm_subnet_network_security_group_association" "subnet" {
