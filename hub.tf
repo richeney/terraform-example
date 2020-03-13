@@ -34,5 +34,3 @@ module "hub" {
   recovery_vault_name         = "${var.hub}-recovery-vault"
   diagnostics_storage_account = "${var.hub}bootdiags"
 }
-
-// resource "azurerm_resource_group" "spoke1" {}
