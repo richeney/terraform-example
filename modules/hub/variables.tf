@@ -6,18 +6,12 @@ variable "resource_group" {
 
 variable "location" {
   type    = string
-  default = "westeurope"
+  default = ""
 }
 
 variable "tags" {
-  type = object({
-    owner         = string
-    business_unit = string
-    costcode      = number
-    downtime      = string
-    env           = string
-    enforce       = bool
-  })
+  type    = map
+  default = {}
 }
 
 variable "vnet_name" {

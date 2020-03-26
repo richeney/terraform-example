@@ -64,3 +64,9 @@ variable "service_endpoints" {
   description = "{ <subnet_name>: [ \"AzureService\" ]} from AzureActiveDirectory, AzureCosmosDB, ContainerRegistry, EventHub, KeyVault, ServiceBus, Sql, Storage and Web."
   default     = {}
 }
+
+variable "hub_id" {
+  type        = string
+  default     = ""
+  description = "Resource ID for hub vnet. Triggers standard hub amd spoke peer."
+}

@@ -1,12 +1,17 @@
+resource "azurerm_resource_group" "hub" {
+  name     = "hub"
+  location = var.location
+  tags     = var.tags
+}
+
 module "hub" {
-  source = "./modules/hub"
+  source  = "./modules/hub"
+  depends = [azurerm_resource_group.hub]
 
-  location       = var.location
-  resource_group = var.hub
-  tags           = var.tags
-
+  resource_group     = azurerm_resource_group.hub.name
   vnet_name          = var.hub
   vnet_address_space = var.hub_vnet_address_space
+
   subnets = [
     {
       name           = "GatewaySubnet"

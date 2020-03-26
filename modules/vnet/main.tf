@@ -6,8 +6,7 @@ data "azurerm_resource_group" "vnet" {
 
 locals {
   location = var.location != "" ? var.location : data.azurerm_resource_group.vnet.location
-
-  tags = merge(data.azurerm_resource_group.vnet.tags, var.tags)
+  tags     = merge(data.azurerm_resource_group.vnet.tags, var.tags)
 
   subnets = length(var.subnets) > 0 ? var.subnets : [{
     name           = var.subnet_name

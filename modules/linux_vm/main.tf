@@ -81,7 +81,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
   //   }
   // }
 
-  // boot_diagnostics {
-  //   storage_account_uri = var.diagnostics_workspace
-  // }
+  boot_diagnostics {
+    storage_account_uri = var.boot_diagnostics_id
+  }
 }

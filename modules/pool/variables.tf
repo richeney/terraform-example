@@ -2,15 +2,7 @@ variable "resource_group" {}
 
 variable "subnet_id" {}
 
-variable "name" {
-  default = "myVM"
-}
-
-variable "names" {
-  // User either name or names. Names has precedence.
-  type    = list(string)
-  default = []
-}
+variable "prefix" {}
 
 variable "vm_size" {
   default = "Standard_B1ls"
@@ -33,9 +25,4 @@ variable "admin_username" {
 variable "ssh_users" {
   description = "Set of key vault secrets containing SSH public keys"
   type        = set(string)
-}
-
-variable "boot_diagnostics_id" {
-  description = "Resource ID for the boot diagnostics storage account."
-  type        = string
 }

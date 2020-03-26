@@ -1,23 +1,24 @@
 data "azurerm_client_config" "current" {
 }
 
+data "azurerm_resource_group" "hub" {
+  name = var.resource_group
+}
+
 locals {
+  location = var.location != "" ? var.location : data.azurerm_resource_group.hub.location
+  tags     = merge(data.azurerm_resource_group.hub.tags, var.tags)
+
   ssh_public_keys = {
     for object in var.ssh_public_keys :
     object.username => file(object.ssh_public_key_file)
   }
 }
 
-resource "azurerm_resource_group" "hub" {
-  name     = var.resource_group
-  location = var.location
-  tags     = var.tags
-}
-
 module "vnet" {
   source = "../vnet"
 
-  resource_group = azurerm_resource_group.hub.name
+  resource_group = data.azurerm_resource_group.hub.name
   vnet_name      = var.vnet_name
   address_space  = var.vnet_address_space
   ddos           = var.ddos
@@ -37,17 +38,15 @@ resource "random_string" "hub" {
 
 resource "azurerm_key_vault" "hub" {
   name                = "${substr(var.key_vault_name, 0, 13)}-${random_string.hub.result}"
-  location            = azurerm_resource_group.hub.location
-  resource_group_name = azurerm_resource_group.hub.name
-  tags                = azurerm_resource_group.hub.tags
+  resource_group_name = data.azurerm_resource_group.hub.name
+  location            = local.location
+  tags                = local.tags
   tenant_id           = data.azurerm_client_config.current.tenant_id
 
   sku_name                        = "standard"
   enabled_for_deployment          = false
   enabled_for_template_deployment = false
   enabled_for_disk_encryption     = false
-
-
 
   access_policy {
     tenant_id = data.azurerm_client_config.current.tenant_id
@@ -100,9 +99,9 @@ resource "null_resource" "ssh_pub_key_sleep" {
 
 resource "azurerm_log_analytics_workspace" "hub" {
   name                = "${var.workspace_name}-${random_string.hub.result}"
-  location            = azurerm_resource_group.hub.location
-  resource_group_name = azurerm_resource_group.hub.name
-  tags                = azurerm_resource_group.hub.tags
+  resource_group_name = data.azurerm_resource_group.hub.name
+  location            = local.location
+  tags                = local.tags
 
   sku               = "PerGB2018"
   retention_in_days = var.workspace_retention
@@ -123,9 +122,9 @@ resource "azurerm_key_vault_secret" "hub_workspace_key" {
 
 resource "azurerm_storage_account" "diags" {
   name                = "${substr(lower(var.diagnostics_storage_account), 0, 14)}${random_string.hub.result}"
-  resource_group_name = azurerm_resource_group.hub.name
-  location            = azurerm_resource_group.hub.location
-  tags                = azurerm_resource_group.hub.tags
+  resource_group_name = data.azurerm_resource_group.hub.name
+  location            = local.location
+  tags                = local.tags
 
   account_kind             = "StorageV2"
   account_tier             = "Standard"
@@ -148,16 +147,16 @@ resource "azurerm_key_vault_secret" "hub_diags_key" {
 
 resource "azurerm_recovery_services_vault" "hub" {
   name                = var.recovery_vault_name
-  resource_group_name = azurerm_resource_group.hub.name
-  location            = azurerm_resource_group.hub.location
-  tags                = azurerm_resource_group.hub.tags
+  resource_group_name = data.azurerm_resource_group.hub.name
+  location            = local.location
+  tags                = local.tags
   sku                 = "Standard"
   soft_delete_enabled = true
 }
 
 resource "azurerm_backup_policy_vm" "default" {
   name                = "default"
-  resource_group_name = azurerm_resource_group.hub.name
+  resource_group_name = data.azurerm_resource_group.hub.name
   recovery_vault_name = azurerm_recovery_services_vault.hub.name
 
   timezone = "UTC"
