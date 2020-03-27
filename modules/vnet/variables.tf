@@ -70,3 +70,8 @@ variable "hub_id" {
   default     = ""
   description = "Resource ID for hub vnet. Triggers standard hub amd spoke peer."
 }
+
+variable "module_depends_on" {
+  type    = any
+  default = null
+}

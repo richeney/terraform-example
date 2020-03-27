@@ -39,3 +39,8 @@ variable "boot_diagnostics_id" {
   description = "Resource ID for the boot diagnostics storage account."
   type        = string
 }
+
+variable "module_depends_on" {
+  type    = any
+  default = null
+}

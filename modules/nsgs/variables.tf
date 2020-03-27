@@ -41,3 +41,8 @@ variable "tags" {
   type    = map
   default = {}
 }
+
+variable "module_depends_on" {
+  type    = any
+  default = null
+}

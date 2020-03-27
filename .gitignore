@@ -6,3 +6,6 @@ terraform.tf*
 modules/*/.terraform/*
 modules/*/terraform.tf*
 modules/*/provider.tf
+examples/*/.terraform/*
+examples/*/terraform.tf*
+examples/*/provider.tf

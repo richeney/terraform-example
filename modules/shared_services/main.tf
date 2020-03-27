@@ -2,7 +2,8 @@ data "azurerm_client_config" "current" {
 }
 
 data "azurerm_resource_group" "hub" {
-  name = var.resource_group
+  name       = var.resource_group
+  depends_on = [var.module_depends_on]
 }
 
 locals {
@@ -13,19 +14,6 @@ locals {
     for object in var.ssh_public_keys :
     object.username => file(object.ssh_public_key_file)
   }
-}
-
-module "vnet" {
-  source = "../vnet"
-
-  resource_group = data.azurerm_resource_group.hub.name
-  vnet_name      = var.vnet_name
-  address_space  = var.vnet_address_space
-  ddos           = var.ddos
-
-  subnets = var.subnets
-
-  service_endpoints = var.service_endpoints
 }
 
 resource "random_string" "hub" {

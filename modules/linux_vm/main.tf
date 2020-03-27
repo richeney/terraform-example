@@ -3,7 +3,8 @@ locals {
 }
 
 data "azurerm_resource_group" "vm" {
-  name = var.resource_group
+  name       = var.resource_group
+  depends_on = [var.module_depends_on]
 }
 
 data "azurerm_key_vault_secret" "ssh_public_key" {

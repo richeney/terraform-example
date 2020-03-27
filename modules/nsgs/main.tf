@@ -1,7 +1,8 @@
 data "azurerm_client_config" "current" {}
 
 data "azurerm_resource_group" "nsg" {
-  name = var.resource_group
+  name       = var.resource_group
+  depends_on = [var.module_depends_on]
 }
 
 locals {

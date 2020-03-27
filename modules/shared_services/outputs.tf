@@ -1,11 +1,3 @@
-output "vnet" {
-  value = module.vnet.vnet
-}
-
-output "subnets" {
-  value = module.vnet.subnets
-}
-
 output "key_vault" {
   value = {
     name = azurerm_key_vault.hub.name

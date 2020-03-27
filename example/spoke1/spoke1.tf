@@ -6,10 +6,10 @@ resource "azurerm_resource_group" "spoke1" {
   tags     = var.tags
 }
 
-module "spoke1_nsg" {
-  source         = "./modules/nsg"
-  resource_group = azurerm_resource_group.spoke1.name
-  depends        = [azurerm_resource_group.spoke1]
+module "spoke1_nsgs" {
+  source            = "./modules/nsgs"
+  resource_group    = azurerm_resource_group.spoke1.name
+  module_depends_on = azurerm_resource_group.spoke1
 
   asgs = [
     "Web",
@@ -50,16 +50,16 @@ module "spoke1_nsg" {
 }
 
 module "spoke1_vnet" {
-  source = "./modules/vnet"
-  depends        = [azurerm_resource_group.spoke1]
+  source            = "./modules/vnet"
+  module_depends_on = azurerm_resource_group.spoke1
 
-  resource_group        = azurerm_resource_group.spoke1.name
-  vnet_name             = "spoke1"
-  address_space         = ["10.1.1.0/24"]
-  subnet_name           = "app1"
-  subnet_address_prefix = "10.1.1.0/25"
-  hub_id                = module.hub.vnet.id
-  // network_security_group_id = null
+  resource_group            = azurerm_resource_group.spoke1.name
+  vnet_name                 = "spoke1"
+  address_space             = ["10.1.1.0/24"]
+  subnet_name               = "app1"
+  subnet_address_prefix     = "10.1.1.0/25"
+  hub_id                    = module.hub_vnet.vnet.id
+  network_security_group_id = module.spoke1_nsgs.nsg_ids["Application1"]
 }
 
 

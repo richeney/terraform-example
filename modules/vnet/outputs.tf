@@ -28,7 +28,7 @@ output "subnets" {
       name           = subnet.name
       address_prefix = subnet.address_prefix
       nsg_id         = subnet.nsg_id
-      id             = azurerm_subnet.subnet[subnet.name].id
+      // id             = azurerm_subnet.subnet[subnet.name].id
     }
   }
 }
