@@ -7,3 +7,6 @@ terraform.tf*
 modules/*/.terraform/*
 modules/*/terraform.tf*
 modules/*/provider.tf
+labs/*/.terraform/*
+labs/*/terraform.tf*
+labs/*/provider.tf
