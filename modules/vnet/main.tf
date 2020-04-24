@@ -1,14 +1,6 @@
 data "azurerm_client_config" "current" {}
 
-data "azurerm_resource_group" "vnet" {
-  name       = var.resource_group
-  depends_on = [var.module_depends_on]
-}
-
 locals {
-  location = var.location != "" ? var.location : data.azurerm_resource_group.vnet.location
-  tags     = merge(data.azurerm_resource_group.vnet.tags, var.tags)
-
   // Avoid lists of maps as for_each want either sets or maps
   // And dynamic maps using for x in y cause errors in nested modules
   // Convert into a map of maps
@@ -24,8 +16,10 @@ locals {
     }
   }
 
-  subnet_nsgs = {}
-
+  subnet_nsgs = {
+    for name, subnet in local.subnets :
+    (name) => subnet if subnet.nsg_id != null
+  }
 
   // Only one DDOS Protection Plan per region
   ddos_vnet = toset(var.ddos ? ["Standard"] : [])
@@ -41,11 +35,11 @@ locals {
 
 resource "azurerm_network_ddos_protection_plan" "ddos" {
   for_each = local.ddos_vnet
-  name     = local.location
+  name     = each.value
 
-  resource_group_name = data.azurerm_resource_group.vnet.name
-  location            = local.location
-  tags                = local.tags
+  resource_group_name = var.resource_group
+  location            = var.location
+  tags                = var.tags
 
   lifecycle {
     ignore_changes = [tags]
@@ -54,9 +48,9 @@ resource "azurerm_network_ddos_protection_plan" "ddos" {
 
 resource "azurerm_virtual_network" "vnet" {
   name                = var.vnet_name
-  resource_group_name = data.azurerm_resource_group.vnet.name
-  location            = local.location
-  tags                = local.tags
+  resource_group_name = var.resource_group
+  location            = var.location
+  tags                = var.tags
 
   address_space = var.address_space
   dns_servers   = var.dns_servers
@@ -75,7 +69,7 @@ resource "azurerm_virtual_network" "vnet" {
 }
 
 resource "azurerm_subnet" "subnet" {
-  resource_group_name  = data.azurerm_resource_group.vnet.name
+  resource_group_name  = var.resource_group
   virtual_network_name = azurerm_virtual_network.vnet.name
 
   for_each = local.subnets
@@ -85,14 +79,9 @@ resource "azurerm_subnet" "subnet" {
   service_endpoints = contains(keys(local.service_endpoints), each.key) ? local.service_endpoints[each.key] : null
 }
 
-/*
 resource "azurerm_subnet_network_security_group_association" "subnet" {
-  for_each = {
-    for subnet in local.subnets :
-    subnet.name => subnet.nsg_id if subnet.nsg_id != null
-  }
+  for_each = local.subnet_nsgs
 
   subnet_id                 = azurerm_subnet.subnet[each.key].id
-  network_security_group_id = each.value
+  network_security_group_id = each.value.nsg_id
 }
-*/

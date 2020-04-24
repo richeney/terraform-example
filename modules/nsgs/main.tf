@@ -1,15 +1,6 @@
 data "azurerm_client_config" "current" {}
 
-data "azurerm_resource_group" "nsg" {
-  name       = var.resource_group
-  depends_on = [var.module_depends_on]
-}
-
 locals {
-  location = var.location != "" ? var.location : data.azurerm_resource_group.nsg.location
-
-  tags = merge(data.azurerm_resource_group.nsg.tags, var.tags)
-
   // Is there a way to derive this safely? Add in PaaS services?
   service_tags = [
     "VirtualNetwork",
@@ -38,9 +29,9 @@ locals {
 }
 
 resource "azurerm_application_security_group" "asg" {
-  resource_group_name = data.azurerm_resource_group.nsg.name
-  location            = local.location
-  tags                = local.tags
+  resource_group_name = var.resource_group
+  location            = var.location
+  tags                = var.tags
 
   for_each = toset(local.asgs)
   name     = each.value
@@ -51,9 +42,9 @@ resource "azurerm_application_security_group" "asg" {
 }
 
 resource "azurerm_network_security_group" "nsg" {
-  resource_group_name = data.azurerm_resource_group.nsg.name
-  location            = local.location
-  tags                = local.tags
+  resource_group_name = var.resource_group
+  location            = var.location
+  tags                = var.tags
 
   for_each = toset(local.nsg_rules[*].nsg)
   name     = each.value
@@ -65,7 +56,7 @@ resource "azurerm_network_security_group" "nsg" {
 
 
 resource "azurerm_network_security_rule" "rule" {
-  resource_group_name = data.azurerm_resource_group.nsg.name
+  resource_group_name = var.resource_group
 
   for_each = {
     for rule in local.nsg_rules :

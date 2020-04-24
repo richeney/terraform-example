@@ -7,10 +7,12 @@ resource "azurerm_resource_group" "hub" {
 module "hub_vnet" {
   source            = "../modules/vnet"
   module_depends_on = azurerm_resource_group.hub
+  resource_group    = azurerm_resource_group.hub.name
+  location          = azurerm_resource_group.hub.location
+  tags              = azurerm_resource_group.hub.tags
 
-  resource_group = azurerm_resource_group.hub.name
-  vnet_name      = "hub"
-  address_space  = ["10.1.0.0/24"]
+  vnet_name     = "hub"
+  address_space = ["10.1.0.0/24"]
 
   subnets = [
     {
@@ -43,8 +45,9 @@ module "hub_vnet" {
 module "shared_services" {
   source            = "../modules/shared_services"
   module_depends_on = azurerm_resource_group.hub
-
-  resource_group = azurerm_resource_group.hub.name
+  resource_group    = azurerm_resource_group.hub.name
+  location          = azurerm_resource_group.hub.location
+  tags              = azurerm_resource_group.hub.tags
 
   key_vault_name = "${var.hub}-key-vault"
   ssh_public_keys = [
