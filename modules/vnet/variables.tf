@@ -31,32 +31,16 @@ variable "dns_servers" {
   default = null
 }
 
-variable "subnet_name" {
-  type    = string
-  default = "GatewaySubnet"
-}
-
-variable "subnet_address_prefix" {
-  type    = string
-  default = "10.0.0.0/24"
-}
-
-variable "network_security_group_id" {
-  type    = string
-  default = null
-}
-
-// Can't default private endpoints to [] until https://github.com/hashicorp/terraform/issues/19898 is resolved
-
 variable "subnets" {
-  type = list(object({
-    name           = string
-    address_prefix = string
-    nsg_id         = string
-    // private_endpoints = { type = list(string), default = [] }
-  }))
+  type = map(string)
+  description = "Simple map of subnet names to address prefixes"
+  default = {}
+}
 
-  default = []
+variable "subnet_nsgs" {
+  type = map(string)
+  description = "Simple map of subnet names to nsg_ids"
+  default = {}
 }
 
 variable "service_endpoints" {
@@ -75,3 +59,34 @@ variable "module_depends_on" {
   type    = any
   default = null
 }
+
+/*
+
+// Forget these until they make defaults in types available
+// https://github.com/hashicorp/terraform/issues/19898
+
+variable "subnet_name" {
+  type    = string
+  default = "GatewaySubnet"
+}
+
+variable "subnet_address_prefix" {
+  type    = string
+  default = "10.0.0.0/24"
+}
+
+variable "network_security_group_id" {
+  type    = string
+  default = null
+}
+
+variable "subnets" {
+  type = list(object({
+    name           = string
+    address_prefix = string
+    nsg_id         = string // Explicitly set to null for no nsg
+  }))
+
+  default = []
+}
+*/

@@ -26,11 +26,13 @@ variable "nsgs" {
   }))
 }
 
+/*
 variable "prefix" {
   description = "Optional prefix for all resources to be created"
   type        = string
   default     = ""
 }
+*/
 
 variable "location" {
   type    = string

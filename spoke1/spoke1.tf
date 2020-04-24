@@ -20,11 +20,11 @@ module "spoke1_nsgs" {
 
   nsgs = [
     {
-      name = "Spoke1_Application1"
+      name = "Application1"
       rules = [
         {
           priority = 100,
-          name     = "Spoke1_Application1_Internet_to_Web",
+          name     = "Application1_Internet_to_Web",
           source   = "Internet",
           dest     = "Web",
           ports    = [80, 443],
@@ -32,7 +32,7 @@ module "spoke1_nsgs" {
         },
         {
           priority = 110,
-          name     = "Spoke1_Application1_Web_to_Logic",
+          name     = "Application1_Web_to_Logic",
           source   = "Web",
           dest     = "Logic",
           ports    = [8443],
@@ -40,7 +40,7 @@ module "spoke1_nsgs" {
         },
         {
           priority = 120,
-          name     = "Spoke1_Application1_Logic_to_Database",
+          name     = "Application1_Logic_to_Database",
           source   = "Logic",
           dest     = "Database",
           ports    = [22, 443],
@@ -60,12 +60,16 @@ module "spoke1_vnet" {
   vnet_name     = "spoke1"
   address_space = ["10.1.1.0/24"]
 
-  subnet_name               = "app1"
-  subnet_address_prefix     = "10.1.1.0/25"
-  network_security_group_id = module.spoke1_nsgs.nsg_ids["Spoke1_Application1"]
+  subnets = {
+    "app1_web"  = "10.1.1.0/25"
+    "app1_test" = "10.1.1.128/25"
+  }
 
-  hub_id = module.hub_vnet.vnet.id
+  subnet_nsgs = {
+    "app1_web" = module.spoke1_nsgs.nsg_ids["Application1"]
+  }
+
+  // hub_id = module.hub_vnet.vnet.id
 }
-
 
 ## VM info to be added

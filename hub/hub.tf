@@ -14,28 +14,12 @@ module "hub_vnet" {
   vnet_name     = "hub"
   address_space = ["10.1.0.0/24"]
 
-  subnets = [
-    {
-      name           = "AzureFirewallSubnet"
-      address_prefix = "10.1.0.0/26"
-      nsg_id         = null
-    },
-    {
-      name           = "SharedServices"
-      address_prefix = "10.1.0.128/26"
-      nsg_id         = null
-    },
-    {
-      name           = "AzureBastionSubnet"
-      address_prefix = "10.1.0.192/27"
-      nsg_id         = null
-    },
-    {
-      name           = "GatewaySubnet"
-      address_prefix = "10.1.0.224/27"
-      nsg_id         = null
-    }
-  ]
+  subnets = {
+    "SharedServices"      = "10.1.0.0/25",
+    "AzureFirewallSubnet" = "10.1.0.128/26",
+    "AzureBastionSubnet"  = "10.1.0.192/27",
+    "GatewaySubnet"       = "10.1.0.224/27"
+  }
 
   service_endpoints = {
     "SharedServices" = ["Sql", "AzureActiveDirectory"]

@@ -8,15 +8,17 @@ locals {
     "Internet"
   ]
 
+  /*
   asgs = [
     for asg in var.asgs :
     "${var.prefix}${asg}"
   ]
+  */
 
   nsg_rules = flatten([
     for nsg in var.nsgs : [
       for rule in nsg.rules : {
-        nsg      = "${var.prefix}${nsg.name}"
+        nsg      = nsg.name
         priority = rule.priority
         name     = rule.name
         source   = rule.source
@@ -33,7 +35,7 @@ resource "azurerm_application_security_group" "asg" {
   location            = var.location
   tags                = var.tags
 
-  for_each = toset(local.asgs)
+  for_each = toset(var.asgs)
   name     = each.value
 
   lifecycle {
@@ -69,10 +71,10 @@ resource "azurerm_network_security_rule" "rule" {
   direction                                  = "Inbound"
   access                                     = "Allow"
   source_address_prefix                      = contains(var.asgs, each.value.source) ? null : each.value.source
-  source_application_security_group_ids      = contains(var.asgs, each.value.source) ? [azurerm_application_security_group.asg["${var.prefix}${each.value.source}"].id] : null
+  source_application_security_group_ids      = contains(var.asgs, each.value.source) ? [azurerm_application_security_group.asg[each.value.source].id] : null
   source_port_range                          = "*"
   destination_address_prefix                 = contains(var.asgs, each.value.dest) ? null : each.value.dest
-  destination_application_security_group_ids = contains(var.asgs, each.value.dest) ? [azurerm_application_security_group.asg["${var.prefix}${each.value.dest}"].id] : null
+  destination_application_security_group_ids = contains(var.asgs, each.value.dest) ? [azurerm_application_security_group.asg[each.value.dest].id] : null
   destination_port_ranges                    = each.value.ports
   protocol                                   = each.value.protocol
 }

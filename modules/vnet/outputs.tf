@@ -20,7 +20,12 @@ output "vnet" {
   */
 }
 
+output "subnets" {
+  value = merge(var.subnets, var.subnet_nsgs)
+  // Update this to a dynamic map so that nsg_id can be set to null
+}
 
+/*
 output "subnets" {
   value = {
     for subnet in local.subnets :
@@ -32,3 +37,4 @@ output "subnets" {
     }
   }
 }
+*/

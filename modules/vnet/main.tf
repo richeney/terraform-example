@@ -5,22 +5,6 @@ locals {
   // And dynamic maps using for x in y cause errors in nested modules
   // Convert into a map of maps
 
-  subnets = length(var.subnets) > 0 ? {
-    for subnet in var.subnets :
-    (subnet.name) => subnet
-    } : {
-    (var.subnet_name) = {
-      name           = var.subnet_name
-      address_prefix = var.subnet_address_prefix
-      nsg_id         = var.network_security_group_id
-    }
-  }
-
-  subnet_nsgs = {
-    for name, subnet in local.subnets :
-    (name) => subnet if subnet.nsg_id != null
-  }
-
   // Only one DDOS Protection Plan per region
   ddos_vnet = toset(var.ddos ? ["Standard"] : [])
 
@@ -72,16 +56,16 @@ resource "azurerm_subnet" "subnet" {
   resource_group_name  = var.resource_group
   virtual_network_name = azurerm_virtual_network.vnet.name
 
-  for_each = local.subnets
+  for_each = var.subnets
 
-  name              = each.value.name
-  address_prefix    = each.value.address_prefix
+  name              = each.key
+  address_prefix    = each.value
   service_endpoints = contains(keys(local.service_endpoints), each.key) ? local.service_endpoints[each.key] : null
 }
 
 resource "azurerm_subnet_network_security_group_association" "subnet" {
-  for_each = local.subnet_nsgs
+  for_each = var.subnet_nsgs
 
   subnet_id                 = azurerm_subnet.subnet[each.key].id
-  network_security_group_id = each.value.nsg_id
+  network_security_group_id = each.value
 }
