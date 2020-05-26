@@ -21,9 +21,3 @@ output "hub_diags" {
 output "ssh_users" {
   value = module.shared_services.ssh_users
 }
-
-/*
-output "vm" {
-  value = module.deleteme.vm
-}
-*/
